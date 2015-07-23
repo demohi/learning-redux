@@ -1,8 +1,8 @@
 # learning-redux
 
-梳理 redux 背后原理，具体 redux 的使用请访问[redux](https://github.com/gaearon/redux)
+具体 redux 的使用请访问[redux](https://github.com/gaearon/redux)
 
-就是一个流水账记录
+本文主要是一个学习过程的流水账。。
 
 ## redux
 
@@ -235,5 +235,23 @@ export function incrementIfOdd() {
 ```
 
 
+## middleware
+
+redux 的middleware是为了支持更多种的 action 
+
+```javascript
+	// Instead of this
+	dispatch(action)
+	// do this
+	middleware(dispatch)(action)
+
+	// simple middleware
+	function promiseMiddleware(next) {
+	  return action =>
+	    action && typeof action.then === 'function'
+	      ? action.then(next)
+	      : next(action);
+	}	
+```
 
 

@@ -1,2 +1,2 @@
 # learning-redux
-learing redux
+learning redux

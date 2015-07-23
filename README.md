@@ -22,8 +22,10 @@ redux 是一个 Flux 架构的实现，相比其他 Flux 框架，它又很多�
 ### redux 代码整理
 
 #### Provider
-先粘点代码，为了将 state 转换为 props，需要在最外层的组件外封装一层Provider，所以 redux 里面你需要这样写
 
+Provider 是用来接收整个应用 Store 的组件，这一层的封装主要是为了支持 hot-reload
+
+Provider 将 this.state.store 绑定到了 context，是的下层的 connector 得以改变全局 state
 
 ```javascript
 	import { createStore, combineReducers } from 'redux';
@@ -38,8 +40,10 @@ redux 是一个 Flux 架构的实现，相比其他 Flux 框架，它又很多�
 
 	export default class App extends Component {
 	  render() {
-	  	// Provider 接收一个 props 为 store
-	  	// Provider 的 children 必须为一个 function，因为 Provider 内部会执行 this.props.children()
+	  	/** Provider 接收一个 props 为 store
+	  	 * Provider 的 children 必须为一个 function，
+	  	 * 因为 Provider 内部会执行 this.props.children()
+	  	 */
 	    return (	
 	      <Provider store={store}>
 	        {() => <TodoApp /> }
@@ -67,6 +71,164 @@ redux 为了方便开发，使用了decorator，来简化开发，上面的代�
 	  }
 	}
 ```
+
+#### Reducer
+
+reducers 可以理解为一堆 fn(state, action) 的函数，例如
+
+```javascript
+//传入 state 和 action，返回新的 state
+export default function todos(state = initialState, action) {
+  switch (action.type) {
+  case ADD_TODO:
+    return [{
+      id: (state.length === 0) ? 0 : state[0].id + 1,
+      marked: false,
+      text: action.text
+    }, ...state];
+  	break;
+  }
+}  	  
+```
+
+那么 reducer 怎么被使用呢？
+
+```javascript
+    // 把多个 reducers 合并成一个 reducer
+	const reducer = combineReducers(reducers);
+	const store = createStore(reducer);
+```
+
+combineReducers的源码如下(简化版)
+
+```javascript
+export default function combineReducers(reducers) {
+  // 容错代码  pick 主要是把非 function 的 reducer 删除
+  var finalReducers = pick(reducers, (val) => typeof val === 'function');
+  // combineReducers最后返回的是一个函数，接收 steate 和 action
+  // 看明白了吧，这个函数就是为了把多个 reducers 合并成一个 reducer
+  return function combination(state = {}, action) {
+    return mapValues(finalReducers, (reducer, key) => {
+      //state 会根据 key 来区分
+      var newState = reducer(state[key], action);
+      return newState;
+    });
+  };
+}
+```
+
+#### Store
+
+store 会存储当前的 state、另外可以调用 action 和监听变化
+
+
+#### Connector
+
+
+
+```javascript
+import React, { Component } from 'react';
+import { bindActionCreators } from 'redux';
+import { Connector } from 'react-redux';
+import Header from '../components/Header';
+import MainSection from '../components/MainSection';
+import * as TodoActions from '../actions/TodoActions';
+
+export default class TodoApp extends Component {
+  render() {
+    return (
+      <Connector select={state => ({ todos: state.todos })}>
+        {this.renderChild}
+      </Connector>
+    );
+  }
+  renderChild({ todos, dispatch }) {
+    const actions = bindActionCreators(TodoActions, dispatch);
+    return (
+      <div>
+        <Header addTodo={actions.addTodo} />
+        <MainSection todos={todos} actions={actions} />
+      </div>
+    );
+  }
+}
+```
+
+
+对于 redux 应用来说，store 和 redux(通过合并成一个) 都只有一个，connector 的作用有两个
+
+* 将 store 的一部分数据，和组件进行绑定
+* 将 action 和数据进行单向绑定   action-->state->view
+
+
+connector 需要传入一个 select 的 props，select 是个函数，参数为 state
+
+state 是当前应用的 state，当前应用的 state 是通过Provider的 this.context.state 传下来的
+
+
+同样 connector 也有 Decorator 的简化版
+
+```javascript
+import React, { Component } from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import Header from '../components/Header';
+import MainSection from '../components/MainSection';
+import * as TodoActions from '../actions/TodoActions';
+@connect({state => ({ todos: state.todos })})
+export default class TodoApp extends Component {
+  render({ todos, dispatch }) {
+  	// actions 
+    const actions = bindActionCreators(TodoActions, dispatch);
+    return (
+      <div>
+        <Header addTodo={actions.addTodo} />
+        <MainSection todos={todos} actions={actions} />
+      </div>
+    );
+  }
+}
+```
+
+#### action
+
+```
+export function addTodo(text) {
+  return {
+    type: types.ADD_TODO,
+    text
+  };
+}
+
+// Can also be async if you return a function
+export function incrementAsync() {
+  return dispatch => {
+    setTimeout(() => {
+      // Yay! Can invoke sync or async actions with `dispatch`
+      dispatch(increment());
+    }, 1000);
+  };
+}
+
+
+// Could also read state of a store in the callback form
+export function incrementIfOdd() {
+  return (dispatch, getState) => {
+    const { counter } = getState();
+
+    if (counter % 2 === 0) {
+      return;
+    }
+
+    dispatch(increment());
+  };
+}
+
+
+
+
+```
+
 
 
 

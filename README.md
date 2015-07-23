@@ -192,6 +192,11 @@ export default class TodoApp extends Component {
 
 #### action
 
+
+action最简单可以返回一个包含 action type 的对象，redux 会对 action 进行封装
+
+同样借助 middleware，你也可以返回 thunk、promise等数据类型
+
 ```
 export function addTodo(text) {
   return {
@@ -201,6 +206,7 @@ export function addTodo(text) {
 }
 
 // Can also be async if you return a function
+// by middleware  redux-thunk
 export function incrementAsync() {
   return dispatch => {
     setTimeout(() => {
@@ -223,7 +229,6 @@ export function incrementIfOdd() {
     dispatch(increment());
   };
 }
-
 
 
 

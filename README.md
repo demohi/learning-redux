@@ -6,7 +6,7 @@
 
 ## redux
 
-redux 是一个 Flux 架构的实现，相比其他 Flux 框架，它又很多很酷的功能
+redux 是一个 Flux 架构的实现，相比其他 Flux 框架，它有很多很酷的功能
 
 - 整个项目所有的代码都是可以 hot-reload，并且不丢失 state，这对于开发复杂的单页应用非常有帮助
 - 基于大量 es6+ 特性开发
@@ -74,7 +74,7 @@ redux 为了方便开发，使用了decorator，来简化开发，上面的代�
 
 #### Reducer
 
-reducers 可以理解为一堆 fn(state, action) 的函数，例如
+reducers 可以理解为一堆 newState = fn(oldS tate, action) 的函数，例如
 
 ```javascript
 //传入 state 和 action，返回新的 state
